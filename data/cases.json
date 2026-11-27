@@ -1,0 +1,504 @@
+{
+  "groups": {
+    "authorization": "Authorization в запросе",
+    "cookie": "Cookie в запросе",
+    "one-set-cookie": "Один Set-Cookie в ответе",
+    "many-set-cookie": "Несколько Set-Cookie в ответе",
+    "authorization-cookie": "Authorization и Cookie в запросе",
+    "control": "Без целевых заголовков",
+    "unknown-scheme": "Неизвестная схема Authorization",
+    "bad-cookie": "Некорректная пара Cookie",
+    "bad-flag": "Secure с присвоенным значением",
+    "missing-blank": "Отсутствует завершающая пустая строка",
+    "folded-header": "Перенос строки заголовка с отступом"
+  },
+  "main": [
+    {
+      "id": "A01",
+      "group": "authorization",
+      "eol": "CRLF",
+      "input": [
+        "GET /case/a01 HTTP/1.1",
+        "Host: example.test",
+        "Authorization: Basic ZmljdGlvbi1hMDE6ZXhhbXBsZS1vbmx5LWEwMQ==",
+        "X-Trace: case-a01",
+        ""
+      ],
+      "expected": {
+        "remove": ["GET /case/a01 HTTP/1.1", "Host: example.test", "X-Trace: case-a01", ""],
+        "mask": ["GET /case/a01 HTTP/1.1", "Host: example.test", "Authorization: Basic MASKED", "X-Trace: case-a01", ""]
+      },
+      "annotations": [
+        {"header": "Authorization", "occurrence": 1, "secrets": [[1, "ZmljdGlvbi1hMDE6ZXhhbXBsZS1vbmx5LWEwMQ=="]], "scheme": "Basic"}
+      ]
+    },
+    {
+      "id": "A02",
+      "group": "authorization",
+      "eol": "LF",
+      "input": [
+        "HEAD /case/a02 HTTP/1.1",
+        "Authorization: Basic ZmljdGlvbi1hMDI6ZXhhbXBsZS1vbmx5LWEwMg==",
+        "Host: sample.example.test",
+        "Accept: text/plain",
+        ""
+      ],
+      "expected": {
+        "remove": ["HEAD /case/a02 HTTP/1.1", "Host: sample.example.test", "Accept: text/plain", ""],
+        "mask": ["HEAD /case/a02 HTTP/1.1", "Authorization: Basic MASKED", "Host: sample.example.test", "Accept: text/plain", ""]
+      },
+      "annotations": [
+        {"header": "Authorization", "occurrence": 1, "secrets": [[1, "ZmljdGlvbi1hMDI6ZXhhbXBsZS1vbmx5LWEwMg=="]], "scheme": "Basic"}
+      ]
+    },
+    {
+      "id": "A03",
+      "group": "authorization",
+      "eol": "CRLF",
+      "input": [
+        "GET /case/a03 HTTP/1.1",
+        "Host: example.test",
+        "Authorization: Bearer zz-a03-auth-29.1",
+        ""
+      ],
+      "expected": {
+        "remove": ["GET /case/a03 HTTP/1.1", "Host: example.test", ""],
+        "mask": ["GET /case/a03 HTTP/1.1", "Host: example.test", "Authorization: Bearer MASKED", ""]
+      },
+      "annotations": [
+        {"header": "Authorization", "occurrence": 1, "secrets": [[1, "zz-a03-auth-29.1"]], "scheme": "Bearer"}
+      ]
+    },
+    {
+      "id": "A04",
+      "group": "authorization",
+      "eol": "LF",
+      "input": [
+        "GET /case/a04?format=text HTTP/1.1",
+        "Host: sample.example.test",
+        "Authorization:    Bearer zz-a04-auth_31~==  ",
+        "X-Trace:  keep  the  spaces ",
+        ""
+      ],
+      "expected": {
+        "remove": ["GET /case/a04?format=text HTTP/1.1", "Host: sample.example.test", "X-Trace:  keep  the  spaces ", ""],
+        "mask": ["GET /case/a04?format=text HTTP/1.1", "Host: sample.example.test", "Authorization: Bearer MASKED", "X-Trace:  keep  the  spaces ", ""]
+      },
+      "annotations": [
+        {"header": "Authorization", "occurrence": 1, "secrets": [[1, "zz-a04-auth_31~=="]], "scheme": "Bearer"}
+      ]
+    },
+    {
+      "id": "C01",
+      "group": "cookie",
+      "eol": "CRLF",
+      "input": ["GET /case/c01 HTTP/1.1", "Host: example.test", "Cookie: sid=zz-c01-sid-6h", ""],
+      "expected": {
+        "remove": ["GET /case/c01 HTTP/1.1", "Host: example.test", ""],
+        "mask": ["GET /case/c01 HTTP/1.1", "Host: example.test", "Cookie: sid=MASKED", ""]
+      },
+      "annotations": [
+        {"header": "Cookie", "occurrence": 1, "secrets": [[1, "zz-c01-sid-6h"]], "cookie_names": ["sid"]}
+      ]
+    },
+    {
+      "id": "C02",
+      "group": "cookie",
+      "eol": "LF",
+      "input": [
+        "GET /case/c02 HTTP/1.1",
+        "Host: example.test",
+        "Cookie: sid=zz-c02-sid-8k; ui=zz-c02-ui-9d; pref=zz-c02-pref-7v",
+        "Accept: */*",
+        ""
+      ],
+      "expected": {
+        "remove": ["GET /case/c02 HTTP/1.1", "Host: example.test", "Accept: */*", ""],
+        "mask": ["GET /case/c02 HTTP/1.1", "Host: example.test", "Cookie: sid=MASKED; ui=MASKED; pref=MASKED", "Accept: */*", ""]
+      },
+      "annotations": [
+        {"header": "Cookie", "occurrence": 1, "secrets": [[1, "zz-c02-sid-8k"], [2, "zz-c02-ui-9d"], [3, "zz-c02-pref-7v"]], "cookie_names": ["sid", "ui", "pref"]}
+      ]
+    },
+    {
+      "id": "C03",
+      "group": "cookie",
+      "eol": "CRLF",
+      "input": ["GET /case/c03 HTTP/1.1", "Host: example.test", "Cookie: sid=; ui=zz-c03-ui-4z", ""],
+      "expected": {
+        "remove": ["GET /case/c03 HTTP/1.1", "Host: example.test", ""],
+        "mask": ["GET /case/c03 HTTP/1.1", "Host: example.test", "Cookie: sid=; ui=MASKED", ""]
+      },
+      "annotations": [
+        {"header": "Cookie", "occurrence": 1, "secrets": [[2, "zz-c03-ui-4z"]], "cookie_names": ["sid", "ui"]}
+      ]
+    },
+    {
+      "id": "C04",
+      "group": "cookie",
+      "eol": "LF",
+      "input": ["GET /case/c04 HTTP/1.1", "Cookie: opaque=zz-c04=jw==; pad=zz-c04=jw==", "Host: example.test", ""],
+      "expected": {
+        "remove": ["GET /case/c04 HTTP/1.1", "Host: example.test", ""],
+        "mask": ["GET /case/c04 HTTP/1.1", "Cookie: opaque=MASKED; pad=MASKED", "Host: example.test", ""]
+      },
+      "annotations": [
+        {"header": "Cookie", "occurrence": 1, "secrets": [[1, "zz-c04=jw=="], [2, "zz-c04=jw=="]], "cookie_names": ["opaque", "pad"]}
+      ]
+    },
+    {
+      "id": "S01",
+      "group": "one-set-cookie",
+      "eol": "CRLF",
+      "input": [
+        "HTTP/1.1 200 OK",
+        "Content-Length: 0",
+        "Set-Cookie: sid=zz-s01-sid-55; Secure; Path=/sample; SameSite=Strict",
+        ""
+      ],
+      "expected": {
+        "remove": ["HTTP/1.1 200 OK", "Content-Length: 0", ""],
+        "mask": ["HTTP/1.1 200 OK", "Content-Length: 0", "Set-Cookie: sid=MASKED; Secure; SameSite=Strict", ""]
+      },
+      "annotations": [
+        {"header": "Set-Cookie", "occurrence": 1, "secrets": [[1, "zz-s01-sid-55"]], "cookie_names": ["sid"], "attributes": ["Secure", "SameSite=Strict"]}
+      ]
+    },
+    {
+      "id": "S02",
+      "group": "one-set-cookie",
+      "eol": "LF",
+      "input": [
+        "HTTP/1.1 204 No Content",
+        "Set-Cookie: ui=zz-s02-ui-26; httponly; Domain=app.example.test; SameSite=Lax",
+        "X-Trace: case-s02",
+        ""
+      ],
+      "expected": {
+        "remove": ["HTTP/1.1 204 No Content", "X-Trace: case-s02", ""],
+        "mask": ["HTTP/1.1 204 No Content", "Set-Cookie: ui=MASKED; httponly; SameSite=Lax", "X-Trace: case-s02", ""]
+      },
+      "annotations": [
+        {"header": "Set-Cookie", "occurrence": 1, "secrets": [[1, "zz-s02-ui-26"]], "cookie_names": ["ui"], "attributes": ["httponly", "SameSite=Lax"]}
+      ]
+    },
+    {
+      "id": "S03",
+      "group": "one-set-cookie",
+      "eol": "CRLF",
+      "input": [
+        "HTTP/1.1 200 OK",
+        "Set-Cookie: stale=; Path=/; Secure; HttpOnly; SameSite=None; Max-Age=0",
+        "Content-Length: 0",
+        ""
+      ],
+      "expected": {
+        "remove": ["HTTP/1.1 200 OK", "Content-Length: 0", ""],
+        "mask": ["HTTP/1.1 200 OK", "Set-Cookie: stale=; Secure; HttpOnly; SameSite=None", "Content-Length: 0", ""]
+      },
+      "annotations": [
+        {"header": "Set-Cookie", "occurrence": 1, "secrets": [], "cookie_names": ["stale"], "attributes": ["Secure", "HttpOnly", "SameSite=None"]}
+      ]
+    },
+    {
+      "id": "S04",
+      "group": "one-set-cookie",
+      "eol": "LF",
+      "input": [
+        "HTTP/1.1 302 Found",
+        "Location: /welcome",
+        "Set-Cookie: lite=zz-s04-lite-2d; Domain=locale.example.test; Path=/v; Priority=Low",
+        "Content-Length: 0",
+        ""
+      ],
+      "expected": {
+        "remove": ["HTTP/1.1 302 Found", "Location: /welcome", "Content-Length: 0", ""],
+        "mask": ["HTTP/1.1 302 Found", "Location: /welcome", "Set-Cookie: lite=MASKED", "Content-Length: 0", ""]
+      },
+      "annotations": [
+        {"header": "Set-Cookie", "occurrence": 1, "secrets": [[1, "zz-s04-lite-2d"]], "cookie_names": ["lite"]}
+      ]
+    },
+    {
+      "id": "M01",
+      "group": "many-set-cookie",
+      "eol": "CRLF",
+      "input": [
+        "HTTP/1.1 200 OK",
+        "Set-Cookie: sid=zz-m01-a-5f; Expires=Wed, 09 Jun 2027 10:18:14 GMT; Secure; Path=/one",
+        "X-Order: between",
+        "Set-Cookie: sid=zz-m01-b-4d; HttpOnly; SameSite=Lax; Domain=api.example.test",
+        "Content-Length: 0",
+        ""
+      ],
+      "expected": {
+        "remove": ["HTTP/1.1 200 OK", "X-Order: between", "Content-Length: 0", ""],
+        "mask": ["HTTP/1.1 200 OK", "Set-Cookie: sid=MASKED; Secure", "X-Order: between", "Set-Cookie: sid=MASKED; HttpOnly; SameSite=Lax", "Content-Length: 0", ""]
+      },
+      "annotations": [
+        {"header": "Set-Cookie", "occurrence": 1, "secrets": [[1, "zz-m01-a-5f"]], "cookie_names": ["sid"], "attributes": ["Secure"]},
+        {"header": "Set-Cookie", "occurrence": 2, "secrets": [[1, "zz-m01-b-4d"]], "cookie_names": ["sid"], "attributes": ["HttpOnly", "SameSite=Lax"]}
+      ]
+    },
+    {
+      "id": "M02",
+      "group": "many-set-cookie",
+      "eol": "LF",
+      "input": [
+        "HTTP/1.1 204 No Content",
+        "Set-Cookie: a=zz-m02-a-9v; HttpOnly; Expires=Tue, 01 Jun 2027 08:00:00 GMT",
+        "set-cookie: b=zz-m02-b-1j; SameSite=Strict; Secure; Expires=Wed, 02 Jun 2027 08:00:00 GMT",
+        "SET-COOKIE: c=zz-m02-c-0c; Path=/demo; Max-Age=3600",
+        ""
+      ],
+      "expected": {
+        "remove": ["HTTP/1.1 204 No Content", ""],
+        "mask": ["HTTP/1.1 204 No Content", "Set-Cookie: a=MASKED; HttpOnly", "set-cookie: b=MASKED; SameSite=Strict; Secure", "SET-COOKIE: c=MASKED", ""]
+      },
+      "annotations": [
+        {"header": "Set-Cookie", "occurrence": 1, "secrets": [[1, "zz-m02-a-9v"]], "cookie_names": ["a"], "attributes": ["HttpOnly"]},
+        {"header": "Set-Cookie", "occurrence": 2, "secrets": [[1, "zz-m02-b-1j"]], "cookie_names": ["b"], "attributes": ["SameSite=Strict", "Secure"]},
+        {"header": "Set-Cookie", "occurrence": 3, "secrets": [[1, "zz-m02-c-0c"]], "cookie_names": ["c"]}
+      ]
+    },
+    {
+      "id": "M03",
+      "group": "many-set-cookie",
+      "eol": "CRLF",
+      "input": [
+        "HTTP/1.1 201 Created",
+        "Content-Length: 0",
+        "Set-Cookie: ui=zz-m03=ui==; HttpOnly; Expires=Thu, 03 Jun 2027 12:00:00 GMT",
+        "X-Trace: case-m03",
+        "Set-Cookie: sid=zz-m03-sid-1t; sEcUrE; sAmEsItE=nOnE; Path=/demo",
+        ""
+      ],
+      "expected": {
+        "remove": ["HTTP/1.1 201 Created", "Content-Length: 0", "X-Trace: case-m03", ""],
+        "mask": ["HTTP/1.1 201 Created", "Content-Length: 0", "Set-Cookie: ui=MASKED; HttpOnly", "X-Trace: case-m03", "Set-Cookie: sid=MASKED; sEcUrE; sAmEsItE=nOnE", ""]
+      },
+      "annotations": [
+        {"header": "Set-Cookie", "occurrence": 1, "secrets": [[1, "zz-m03=ui=="]], "cookie_names": ["ui"], "attributes": ["HttpOnly"]},
+        {"header": "Set-Cookie", "occurrence": 2, "secrets": [[1, "zz-m03-sid-1t"]], "cookie_names": ["sid"], "attributes": ["sEcUrE", "sAmEsItE=nOnE"]}
+      ]
+    },
+    {
+      "id": "M04",
+      "group": "many-set-cookie",
+      "eol": "LF",
+      "input": [
+        "HTTP/1.1 200 OK",
+        "Set-Cookie: sid=zz-m04-shared-71; Secure; Expires=Fri, 04 Jun 2027 09:00:00 GMT",
+        "Set-Cookie: sid=zz-m04-shared-71; SameSite=Strict; HttpOnly",
+        "Content-Length: 0",
+        ""
+      ],
+      "expected": {
+        "remove": ["HTTP/1.1 200 OK", "Content-Length: 0", ""],
+        "mask": ["HTTP/1.1 200 OK", "Set-Cookie: sid=MASKED; Secure", "Set-Cookie: sid=MASKED; SameSite=Strict; HttpOnly", "Content-Length: 0", ""]
+      },
+      "annotations": [
+        {"header": "Set-Cookie", "occurrence": 1, "secrets": [[1, "zz-m04-shared-71"]], "cookie_names": ["sid"], "attributes": ["Secure"]},
+        {"header": "Set-Cookie", "occurrence": 2, "secrets": [[1, "zz-m04-shared-71"]], "cookie_names": ["sid"], "attributes": ["SameSite=Strict", "HttpOnly"]}
+      ]
+    },
+    {
+      "id": "B01",
+      "group": "authorization-cookie",
+      "eol": "CRLF",
+      "input": [
+        "GET /case/b01 HTTP/1.1",
+        "Host: example.test",
+        "aUtHoRiZaTiOn: Basic ZmljdGlvbi1iMDE6ZXhhbXBsZS1vbmx5LWIwMQ==",
+        "X-Trace: case-b01",
+        "cOoKiE: sid=zz-b01-sid-7m; view=zz-b01-view-8y",
+        ""
+      ],
+      "expected": {
+        "remove": ["GET /case/b01 HTTP/1.1", "Host: example.test", "X-Trace: case-b01", ""],
+        "mask": ["GET /case/b01 HTTP/1.1", "Host: example.test", "aUtHoRiZaTiOn: Basic MASKED", "X-Trace: case-b01", "cOoKiE: sid=MASKED; view=MASKED", ""]
+      },
+      "annotations": [
+        {"header": "Authorization", "occurrence": 1, "secrets": [[1, "ZmljdGlvbi1iMDE6ZXhhbXBsZS1vbmx5LWIwMQ=="]], "scheme": "Basic"},
+        {"header": "Cookie", "occurrence": 1, "secrets": [[1, "zz-b01-sid-7m"], [2, "zz-b01-view-8y"]], "cookie_names": ["sid", "view"]}
+      ]
+    },
+    {
+      "id": "B02",
+      "group": "authorization-cookie",
+      "eol": "LF",
+      "input": [
+        "POST /case/b02 HTTP/1.1",
+        "Host: api.example.test",
+        "COOKIE:\tsid=zz-b02-sid-3h",
+        "AUTHORIZATION: bEaReR zz-b02-auth-0x",
+        "Content-Length: 0",
+        ""
+      ],
+      "expected": {
+        "remove": ["POST /case/b02 HTTP/1.1", "Host: api.example.test", "Content-Length: 0", ""],
+        "mask": ["POST /case/b02 HTTP/1.1", "Host: api.example.test", "COOKIE: sid=MASKED", "AUTHORIZATION: bEaReR MASKED", "Content-Length: 0", ""]
+      },
+      "annotations": [
+        {"header": "Cookie", "occurrence": 1, "secrets": [[1, "zz-b02-sid-3h"]], "cookie_names": ["sid"]},
+        {"header": "Authorization", "occurrence": 1, "secrets": [[1, "zz-b02-auth-0x"]], "scheme": "bEaReR"}
+      ]
+    },
+    {
+      "id": "B03",
+      "group": "authorization-cookie",
+      "eol": "CRLF",
+      "input": [
+        "GET /case/b03 HTTP/1.1",
+        "Host: example.test",
+        "Cookie: sid=; flags=zz-b03=on==",
+        "authorization: Bearer zz-b03-auth-7q",
+        "X-Test:\tvalue  ",
+        ""
+      ],
+      "expected": {
+        "remove": ["GET /case/b03 HTTP/1.1", "Host: example.test", "X-Test:\tvalue  ", ""],
+        "mask": ["GET /case/b03 HTTP/1.1", "Host: example.test", "Cookie: sid=; flags=MASKED", "authorization: Bearer MASKED", "X-Test:\tvalue  ", ""]
+      },
+      "annotations": [
+        {"header": "Cookie", "occurrence": 1, "secrets": [[2, "zz-b03=on=="]], "cookie_names": ["sid", "flags"]},
+        {"header": "Authorization", "occurrence": 1, "secrets": [[1, "zz-b03-auth-7q"]], "scheme": "Bearer"}
+      ]
+    },
+    {
+      "id": "B04",
+      "group": "authorization-cookie",
+      "eol": "LF",
+      "input": [
+        "HEAD /case/b04 HTTP/1.1",
+        "Host: example.test",
+        "AuThorization: Basic ZmljdGlvbi1iMDQ6ZXhhbXBsZS1vbmx5LWIwNA==",
+        "Accept: text/plain",
+        "coOKie: Theme=zz-b04-theme-4m; sid=zz-b04-sid-6y",
+        ""
+      ],
+      "expected": {
+        "remove": ["HEAD /case/b04 HTTP/1.1", "Host: example.test", "Accept: text/plain", ""],
+        "mask": ["HEAD /case/b04 HTTP/1.1", "Host: example.test", "AuThorization: Basic MASKED", "Accept: text/plain", "coOKie: Theme=MASKED; sid=MASKED", ""]
+      },
+      "annotations": [
+        {"header": "Authorization", "occurrence": 1, "secrets": [[1, "ZmljdGlvbi1iMDQ6ZXhhbXBsZS1vbmx5LWIwNA=="]], "scheme": "Basic"},
+        {"header": "Cookie", "occurrence": 1, "secrets": [[1, "zz-b04-theme-4m"], [2, "zz-b04-sid-6y"]], "cookie_names": ["Theme", "sid"]}
+      ]
+    },
+    {
+      "id": "N01",
+      "group": "control",
+      "eol": "CRLF",
+      "input": ["GET /case/n01?q=example HTTP/1.1", "Host: example.test", "X-Trace:  original  spaces ", ""],
+      "expected": {
+        "remove": ["GET /case/n01?q=example HTTP/1.1", "Host: example.test", "X-Trace:  original  spaces ", ""],
+        "mask": ["GET /case/n01?q=example HTTP/1.1", "Host: example.test", "X-Trace:  original  spaces ", ""]
+      },
+      "annotations": []
+    },
+    {
+      "id": "N02",
+      "group": "control",
+      "eol": "LF",
+      "input": ["OPTIONS * HTTP/1.1", "host: api.example.test", "X-Cookie-Note: demo", "aCcEpT:\t*/*", ""],
+      "expected": {
+        "remove": ["OPTIONS * HTTP/1.1", "host: api.example.test", "X-Cookie-Note: demo", "aCcEpT:\t*/*", ""],
+        "mask": ["OPTIONS * HTTP/1.1", "host: api.example.test", "X-Cookie-Note: demo", "aCcEpT:\t*/*", ""]
+      },
+      "annotations": []
+    },
+    {
+      "id": "N03",
+      "group": "control",
+      "eol": "CRLF",
+      "input": ["HTTP/1.1 304 Not Modified", "ETag: \"static-demo-n03\"", "X-Order: 1", "X-Order: 2", ""],
+      "expected": {
+        "remove": ["HTTP/1.1 304 Not Modified", "ETag: \"static-demo-n03\"", "X-Order: 1", "X-Order: 2", ""],
+        "mask": ["HTTP/1.1 304 Not Modified", "ETag: \"static-demo-n03\"", "X-Order: 1", "X-Order: 2", ""]
+      },
+      "annotations": []
+    },
+    {
+      "id": "N04",
+      "group": "control",
+      "eol": "LF",
+      "input": ["HTTP/1.1 204 No Content", "Server: demo/1.0", "X-Note: a:b", "X-Empty:", ""],
+      "expected": {
+        "remove": ["HTTP/1.1 204 No Content", "Server: demo/1.0", "X-Note: a:b", "X-Empty:", ""],
+        "mask": ["HTTP/1.1 204 No Content", "Server: demo/1.0", "X-Note: a:b", "X-Empty:", ""]
+      },
+      "annotations": []
+    }
+  ],
+  "additional": [
+    {
+      "id": "E01",
+      "group": "unknown-scheme",
+      "eol": "CRLF",
+      "input": ["GET /case/e01 HTTP/1.1", "Host: example.test", "Authorization: Unknown zz-e01-opaque-62", "X-Trace: case-e01", ""],
+      "expected": {
+        "remove": ["GET /case/e01 HTTP/1.1", "Host: example.test", "X-Trace: case-e01", ""],
+        "mask": ["GET /case/e01 HTTP/1.1", "Host: example.test", "X-Trace: case-e01", ""]
+      },
+      "annotations": [
+        {"header": "Authorization", "occurrence": 1, "secrets": [[1, "zz-e01-opaque-62"]], "scheme": "Unknown"}
+      ]
+    },
+    {
+      "id": "E02",
+      "group": "bad-cookie",
+      "eol": "LF",
+      "input": ["GET /case/e02 HTTP/1.1", "Host: example.test", "Cookie: sid=zz-e02-sid-4x; broken", "X-Trace: case-e02", ""],
+      "expected": {
+        "remove": ["GET /case/e02 HTTP/1.1", "Host: example.test", "X-Trace: case-e02", ""],
+        "mask": ["GET /case/e02 HTTP/1.1", "Host: example.test", "X-Trace: case-e02", ""]
+      },
+      "annotations": [
+        {"header": "Cookie", "occurrence": 1, "secrets": [[1, "zz-e02-sid-4x"]], "cookie_names": ["sid"]}
+      ]
+    },
+    {
+      "id": "E03",
+      "group": "bad-flag",
+      "eol": "CRLF",
+      "input": ["HTTP/1.1 204 No Content", "Set-Cookie: sid=zz-e03-sid-7u; Secure=true; HttpOnly", "X-Trace: case-e03", ""],
+      "expected": {
+        "remove": ["HTTP/1.1 204 No Content", "X-Trace: case-e03", ""],
+        "mask": ["HTTP/1.1 204 No Content", "X-Trace: case-e03", ""]
+      },
+      "annotations": [
+        {"header": "Set-Cookie", "occurrence": 1, "secrets": [[1, "zz-e03-sid-7u"]], "cookie_names": ["sid"], "attributes": ["HttpOnly"]}
+      ]
+    },
+    {
+      "id": "E04",
+      "group": "missing-blank",
+      "eol": "LF",
+      "input": ["GET /case/e04 HTTP/1.1", "Host: example.test", "Cookie: sid=zz-e04-sid-8y"],
+      "expected": {"remove": null, "mask": null},
+      "expected_error": "mask_http: missing final blank line or unexpected message body",
+      "annotations": [
+        {"header": "Cookie", "occurrence": 1, "secrets": [[1, "zz-e04-sid-8y"]], "cookie_names": ["sid"]}
+      ]
+    },
+    {
+      "id": "E05",
+      "group": "folded-header",
+      "eol": "CRLF",
+      "input": [
+        "GET /case/e05 HTTP/1.1",
+        "Host: example.test",
+        "Authorization: Bearer zz-e05-auth-6s",
+        "X-Note: beginning",
+        "\tcontinuation",
+        ""
+      ],
+      "expected": {"remove": null, "mask": null},
+      "expected_error": "mask_http: folded header line",
+      "annotations": [
+        {"header": "Authorization", "occurrence": 1, "secrets": [[1, "zz-e05-auth-6s"]], "scheme": "Bearer"}
+      ]
+    }
+  ]
+}

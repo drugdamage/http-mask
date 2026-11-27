@@ -1,0 +1,2 @@
+# HTTP header blocks end with a blank line.
+examples/*.http whitespace=-blank-at-eof

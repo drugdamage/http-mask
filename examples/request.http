@@ -1,0 +1,5 @@
+GET /profile HTTP/1.1
+Host: example.test
+Authorization: Bearer demo01
+Cookie: sid=demo02
+
